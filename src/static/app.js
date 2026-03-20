@@ -543,6 +543,33 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Build social share content
+    const shareUrl = `${window.location.origin}${window.location.pathname}#activity-${encodeURIComponent(name)}`;
+    const shareText = `Check out ${name} at Mergington High School! ${details.description} Schedule: ${formattedSchedule}`;
+    const encodedShareText = encodeURIComponent(shareText);
+    const encodedShareUrl = encodeURIComponent(shareUrl);
+    const encodedWhatsAppText = encodeURIComponent(`${shareText} ${shareUrl}`);
+
+    const socialShareHtml = `
+      <div class="social-share">
+        <span class="social-share-label">Share:</span>
+        <a class="share-btn share-twitter"
+           href="https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}"
+           target="_blank" rel="noopener noreferrer" title="Share on X (Twitter)"
+           aria-label="Share ${name} on X (Twitter)">𝕏</a>
+        <a class="share-btn share-facebook"
+           href="https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}"
+           target="_blank" rel="noopener noreferrer" title="Share on Facebook"
+           aria-label="Share ${name} on Facebook">f</a>
+        <a class="share-btn share-whatsapp"
+           href="https://api.whatsapp.com/send?text=${encodedWhatsAppText}"
+           target="_blank" rel="noopener noreferrer" title="Share on WhatsApp"
+           aria-label="Share ${name} on WhatsApp">💬</a>
+        <button class="share-btn share-copy" data-activity="${name}" title="Copy link"
+                aria-label="Copy link for ${name}">🔗</button>
+      </div>
+    `;
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -576,6 +603,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      ${socialShareHtml}
       <div class="activity-card-actions">
         ${
           currentUser
@@ -600,6 +628,31 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
     });
+
+    // Add click handler for copy link button
+    const copyButton = activityCard.querySelector(".share-copy");
+    if (copyButton) {
+      copyButton.addEventListener("click", async () => {
+        const activityName = copyButton.dataset.activity;
+        const activity = allActivities[activityName];
+        const schedule = formatSchedule(activity);
+        const activityShareUrl = `${window.location.origin}${window.location.pathname}#activity-${encodeURIComponent(activityName)}`;
+        const text = `Check out ${activityName} at Mergington High School! ${activity.description} Schedule: ${schedule} ${activityShareUrl}`;
+        if (navigator.clipboard) {
+          try {
+            await navigator.clipboard.writeText(text);
+            copyButton.textContent = "✓";
+            setTimeout(() => {
+              copyButton.textContent = "🔗";
+            }, 2000);
+          } catch (err) {
+            showMessage("Could not copy link. Please copy the URL manually.", "error");
+          }
+        } else {
+          showMessage("Clipboard not available. Please copy the URL from your browser.", "error");
+        }
+      });
+    }
 
     // Add click handler for register button (only when authenticated)
     if (currentUser) {
