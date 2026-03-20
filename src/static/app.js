@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const categoryFilters = document.querySelectorAll(".category-filter");
   const dayFilters = document.querySelectorAll(".day-filter");
   const timeFilters = document.querySelectorAll(".time-filter");
+  const difficultyFilters = document.querySelectorAll(".difficulty-filter");
 
   // Authentication elements
   const loginButton = document.getElementById("login-button");
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  let currentDifficulty = "all";
 
   // Authentication state
   let currentUser = null;
@@ -461,6 +463,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      // Apply difficulty filter
+      if (currentDifficulty === "all") {
+        // "All" shows every activity regardless of difficulty
+      } else {
+        // Specific level: show only activities with that exact difficulty
+        if (details.difficulty !== currentDifficulty) {
+          return;
+        }
+      }
+
       // Apply search filter
       const searchableContent = [
         name.toLowerCase(),
@@ -530,6 +542,13 @@ document.addEventListener("DOMContentLoaded", () => {
       </span>
     `;
 
+    // Create difficulty badge (only shown when difficulty is set to a valid level)
+    const validDifficulties = ["Beginner", "Intermediate", "Advanced"];
+    const difficultyBadgeHtml =
+      details.difficulty && validDifficulties.includes(details.difficulty)
+        ? `<span class="difficulty-badge difficulty-${details.difficulty.toLowerCase()}">${details.difficulty}</span>`
+        : "";
+
     // Create capacity indicator
     const capacityIndicator = `
       <div class="capacity-container ${capacityStatusClass}">
@@ -572,6 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activityCard.innerHTML = `
       ${tagHtml}
+      ${difficultyBadgeHtml}
       <h4>${name}</h4>
       <p>${details.description}</p>
       <p class="tooltip">
@@ -718,7 +738,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Open registration modal
+  // Add event listeners for difficulty filter buttons
+  difficultyFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      // Update active class
+      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      // Update current difficulty filter and display filtered activities
+      currentDifficulty = button.dataset.difficulty;
+      displayFilteredActivities();
+    });
+  });
+
   function openRegistrationModal(activityName) {
     modalActivityName.textContent = activityName;
     activityInput.value = activityName;
